@@ -13,7 +13,7 @@ import express        from "express";
 import cors           from "cors";
 import helmet         from "helmet";
 import rateLimit      from "express-rate-limit";
-import { calculateStrategy } from "./CalculatorLogic.js";
+import { calculateStrategy } from "../src/CalculatorLogic.js";
 
 const app  = express();
 const PORT = process.env.PORT || 3001;
