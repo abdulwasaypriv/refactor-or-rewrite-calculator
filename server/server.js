@@ -67,15 +67,15 @@ function validateInputs(body) {
 // ─── Routes ────────────────────────────────────────────────────────────────────
 
 /** Health check */
-app.get("/health", (_req, res) => {
+app.get("/api/health", (_req, res) => {
   res.json({ status: "ok", ts: new Date().toISOString() });
 });
 
 /**
- * POST /calculate
+ * POST /api/calculate
  * Body: { cost, effort, timeline, teamSize, techDebt }  (all integers 1–10)
  */
-app.post("/calculate", (req, res) => {
+app.post("/api/calculate", (req, res) => {
   const errors = validateInputs(req.body);
   if (errors.length) {
     return res.status(422).json({
@@ -96,7 +96,7 @@ app.post("/calculate", (req, res) => {
 
     return res.status(200).json(result);
   } catch (err) {
-    console.error("[/calculate] Unexpected error:", err);
+    console.error("[/api/calculate] Unexpected error:", err);
     return res.status(500).json({ error: "Internal server error." });
   }
 });
@@ -110,8 +110,8 @@ app.use((_req, res) => {
 
 app.listen(PORT, () => {
   console.log(`\n  ✦ Decision API running on http://localhost:${PORT}`);
-  console.log(`  POST /calculate   → strategy engine`);
-  console.log(`  GET  /health      → liveness probe\n`);
+  console.log(`  POST /api/calculate   → strategy engine`);
+  console.log(`  GET  /api/health      → liveness probe\n`);
 });
 
 export default app;
