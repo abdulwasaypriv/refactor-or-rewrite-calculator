@@ -4,9 +4,9 @@
  * Dependencies: @react-three/fiber, @react-three/drei, three
  */
 
-import { useRef, useMemo } from "react";
+import { useRef } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { MeshDistortMaterial, Sphere, OrbitControls, Stars, Float } from "@react-three/drei";
+import { MeshDistortMaterial, Sphere, OrbitControls, Float } from "@react-three/drei";
 import * as THREE from "three";
 
 /** Lerp between two hex colors given a 0-1 t value */
@@ -100,30 +100,57 @@ function Rig({ techDebt }) {
   );
 }
 
+function SyncOrbitControls({ techDebt, onViewChange }) {
+  const controlsRef = useRef(null);
+  const lastRef = useRef({ x: 0, y: 0 });
+  const normalized = (techDebt - 1) / 9;
+
+  useFrame(() => {
+    if (!controlsRef.current || !onViewChange) return;
+
+    const azimuth = controlsRef.current.getAzimuthalAngle();
+    const polar = controlsRef.current.getPolarAngle() - Math.PI / 2;
+    const nextX = polar * (0.5 + normalized * 0.25);
+    const nextY = azimuth;
+
+    if (
+      Math.abs(nextX - lastRef.current.x) > 0.001 ||
+      Math.abs(nextY - lastRef.current.y) > 0.001
+    ) {
+      lastRef.current = { x: nextX, y: nextY };
+      onViewChange(lastRef.current);
+    }
+  });
+
+  return (
+    <OrbitControls
+      ref={controlsRef}
+      enableZoom={false}
+      enablePan={false}
+      autoRotate
+      autoRotateSpeed={0.4}
+      minPolarAngle={Math.PI / 3}
+      maxPolarAngle={(2 * Math.PI) / 3}
+    />
+  );
+}
+
 /**
  * ThreeScene — drop-in React component.
  * @prop {number} techDebt  1–10
  * @prop {number} [height]  Canvas height in px (default 320)
  */
-export default function ThreeScene({ techDebt = 1, height = 320 }) {
+export default function ThreeScene({ techDebt = 1, height = 320, onViewChange }) {
   return (
-    <div style={{ width: "100%", height, borderRadius: "1rem", overflow: "hidden", background: "transparent" }}>
+    <div style={{ width: "100%", height, background: "transparent" }}>
       <Canvas
         camera={{ position: [0, 0, 3.5], fov: 50 }}
         gl={{ antialias: true, alpha: true }}
         style={{ background: "transparent" }}
       >
-        <Stars radius={80} depth={50} count={2000} factor={3} saturation={0} fade speed={0.6} />
         <Rig techDebt={techDebt} />
         <StatusOrb techDebt={techDebt} />
-        <OrbitControls
-          enableZoom={false}
-          enablePan={false}
-          autoRotate
-          autoRotateSpeed={0.4}
-          minPolarAngle={Math.PI / 3}
-          maxPolarAngle={(2 * Math.PI) / 3}
-        />
+        <SyncOrbitControls techDebt={techDebt} onViewChange={onViewChange} />
       </Canvas>
     </div>
   );

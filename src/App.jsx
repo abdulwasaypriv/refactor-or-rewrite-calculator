@@ -10,6 +10,7 @@
 
 import { useState, useCallback, useRef } from "react";
 import ThreeScene from "./ThreeScene";
+import StarsBackground from "./StarsBackground";
 import { calculateStrategy } from "./CalculatorLogic";
 
 // ─── Slider ────────────────────────────────────────────────────────────────────
@@ -172,6 +173,7 @@ export default function App() {
   const [loading,   setLoading]   = useState(false);
   const [error,     setError]     = useState(null);
   const [useApi,    setUseApi]    = useState(false); // toggle between local logic / Express API
+  const [orbitRotation, setOrbitRotation] = useState({ x: 0, y: 0 });
   const resultRef = useRef(null);
 
   const handleChange = useCallback((id, value) => {
@@ -208,19 +210,23 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[#09090b] text-zinc-100 font-['DM_Sans',sans-serif] antialiased">
 
+      {/* Full-screen starfield background, controlled by techDebt */}
+      <StarsBackground techDebt={inputs.techDebt} orbitRotation={orbitRotation} />
+
       {/* Noise/grid texture overlay */}
       <div
         className="fixed inset-0 pointer-events-none opacity-[0.025]"
         style={{
+          zIndex: 1,
           backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Crect x='0' y='0' width='1' height='60' fill='%23fff'/%3E%3Crect x='0' y='0' width='60' height='1' fill='%23fff'/%3E%3C/svg%3E")`,
         }}
       />
 
       {/* Ambient glow */}
       <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] pointer-events-none"
-           style={{ background: "radial-gradient(ellipse at center, rgba(109,40,217,0.08) 0%, transparent 70%)" }} />
+           style={{ zIndex: 1, background: "radial-gradient(ellipse at center, rgba(109,40,217,0.08) 0%, transparent 70%)" }} />
 
-      <div className="relative max-w-6xl mx-auto px-6 py-12">
+      <div className="relative max-w-6xl mx-auto px-6 py-12" style={{ zIndex: 2 }}>
 
         {/* Header */}
         <header className="mb-12">
@@ -255,25 +261,12 @@ export default function App() {
           {/* ── LEFT: Orb + Sliders ────────────────────────────────────────── */}
           <div className="space-y-6">
 
-            {/* 3D Orb card */}
-            <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 backdrop-blur overflow-hidden">
-              <div className="px-5 pt-5 pb-2 flex items-center justify-between">
-                <span className="text-xs font-semibold text-zinc-500 uppercase tracking-widest">System Health Orb</span>
-                <span className="text-xs text-zinc-600">
-                  Debt: <span className="text-zinc-400 font-medium">{inputs.techDebt}/10</span>
-                </span>
-              </div>
-              <ThreeScene techDebt={inputs.techDebt} height={280} />
-              <div className="px-5 pb-4 text-center">
-                <p className="text-[11px] text-zinc-600 italic">
-                  {inputs.techDebt <= 3
-                    ? "Codebase is healthy — distortion minimal."
-                    : inputs.techDebt <= 6
-                    ? "Moderate entropy detected — shape destabilizing."
-                    : "Critical debt mass — structure fragmenting."}
-                </p>
-              </div>
-            </div>
+            {/* 3D Orb — alone, no container */}
+            <ThreeScene
+              techDebt={inputs.techDebt}
+              height={280}
+              onViewChange={setOrbitRotation}
+            />
 
             {/* Sliders */}
             <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 backdrop-blur p-6 space-y-6">
